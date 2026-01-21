@@ -1,0 +1,529 @@
+﻿// Main Application Logic for BookAnizator
+
+const App = {
+  // Current book being processed
+  currentBook: null,
+  currentClassification: null,
+
+  // Scanner instance
+  scanner: null,
+  isScanning: false,
+
+  // Initialize the application
+  init() {
+    UI.init();
+    this.bindEvents();
+    this.refreshBooksList();
+    this.initScanner();
+    console.log('BookAnizator initialized');
+  },
+
+  // Bind main event handlers
+  bindEvents() {
+    // Search button
+    UI.elements.searchBtn?.addEventListener('click', () => this.searchBook());
+
+    // Scan button
+    document.getElementById('scan-btn')?.addEventListener('click', () => this.openScanner());
+
+    // Scanner close/cancel buttons
+    document.getElementById('scanner-close')?.addEventListener('click', () => this.closeScanner());
+    document.getElementById('scanner-cancel')?.addEventListener('click', () => this.closeScanner());
+
+    // Save book button
+    UI.elements.saveBookBtn?.addEventListener('click', () => this.saveBook());
+
+    // Settings
+    UI.elements.saveSettingsBtn?.addEventListener('click', () => this.saveSettings());
+
+    // Export
+    UI.elements.exportBtn?.addEventListener('click', () => this.exportLibrary());
+
+    // Import
+    UI.elements.importFile?.addEventListener('change', (e) => this.importLibrary(e));
+
+    // Filters
+    UI.elements.filterLanguage?.addEventListener('change', () => this.applyFilters());
+    UI.elements.filterCategory?.addEventListener('change', () => this.applyFilters());
+    UI.elements.searchBooks?.addEventListener('input', () => this.applyFilters());
+  },
+
+  // Get API key (from input or storage)
+  getApiKey() {
+    return UI.elements.apiKeyInput?.value || Storage.getApiKey();
+  },
+
+  // Search book by ISBN
+  async searchBook() {
+    const isbn = UI.elements.isbnInput?.value.trim();
+
+    if (!isbn) {
+      UI.showNotification('Por favor, insira um ISBN ou termo de busca.', 'warning');
+      return;
+    }
+
+    // Check if ISBN already exists
+    if (Storage.isbnExists(API.normalizeISBN(isbn))) {
+      UI.showNotification('Este livro já está na sua biblioteca.', 'warning');
+      return;
+    }
+
+    try {
+      UI.showLoading('Buscando livro...');
+
+      // Search in Open Library
+      const bookData = await API.searchByISBN(isbn);
+      this.currentBook = bookData;
+
+      // Display book preview
+      UI.displayBookPreview(bookData);
+
+      // Try to classify with Claude
+      const apiKey = this.getApiKey();
+      if (apiKey) {
+        UI.showLoading('Classificando livro com IA...');
+        try {
+          const existingBooks = Storage.getBooks();
+          const classification = await API.classifyBook(bookData, apiKey, existingBooks);
+          this.currentClassification = classification;
+          UI.displayClassification(classification);
+        } catch (classError) {
+          console.error('Classification error:', classError);
+          UI.showNotification('Não foi possível classificar automaticamente. Selecione manualmente.', 'warning');
+          // Set default classification
+          this.currentClassification = {
+            language: 'Português',
+            category: 'Literatura',
+            confidence: 0,
+            reasoning: ''
+          };
+          UI.displayClassification(this.currentClassification);
+        }
+      } else {
+        UI.showNotification('Configure a API key do Claude para classificação automática.', 'info');
+        this.currentClassification = {
+          language: 'Português',
+          category: 'Literatura',
+          confidence: 0,
+          reasoning: ''
+        };
+        UI.displayClassification(this.currentClassification);
+      }
+
+      UI.hideLoading();
+
+    } catch (error) {
+      UI.hideLoading();
+      UI.showNotification(error.message, 'error');
+      this.currentBook = null;
+      this.currentClassification = null;
+    }
+  },
+
+  // Save book to library
+  saveBook() {
+    if (!this.currentBook) {
+      UI.showNotification('Nenhum livro para salvar. Faça uma busca primeiro.', 'warning');
+      return;
+    }
+
+    // Get selected values from form
+    const language = UI.elements.languageSelect?.value || 'Português';
+    const category = UI.elements.categorySelect?.value || 'Literatura';
+    const notes = UI.elements.notesInput?.value || '';
+
+    const bookToSave = {
+      ...this.currentBook,
+      language,
+      category,
+      classificationConfidence: this.currentClassification?.confidence || 0,
+      notes
+    };
+
+    const savedBook = Storage.addBook(bookToSave);
+
+    if (savedBook) {
+      UI.showNotification(`"${savedBook.title}" adicionado à biblioteca!`, 'success');
+      UI.clearSearch();
+      this.currentBook = null;
+      this.currentClassification = null;
+    } else {
+      UI.showNotification('Erro ao salvar o livro.', 'error');
+    }
+  },
+
+  // Refresh books list
+  refreshBooksList() {
+    const books = Storage.getBooks();
+    UI.renderBooks(books);
+  },
+
+  // Apply filters to books list
+  applyFilters() {
+    let books = Storage.getBooks();
+
+    // Filter by language
+    const languageFilter = UI.elements.filterLanguage?.value;
+    if (languageFilter) {
+      books = books.filter(book => book.language === languageFilter);
+    }
+
+    // Filter by category
+    const categoryFilter = UI.elements.filterCategory?.value;
+    if (categoryFilter) {
+      books = books.filter(book => book.category === categoryFilter);
+    }
+
+    // Search filter
+    const searchTerm = UI.elements.searchBooks?.value.toLowerCase().trim();
+    if (searchTerm) {
+      books = books.filter(book =>
+        book.title.toLowerCase().includes(searchTerm) ||
+        book.authors.some(a => a.toLowerCase().includes(searchTerm)) ||
+        book.isbn.includes(searchTerm)
+      );
+    }
+
+    UI.renderBooks(books);
+  },
+
+  // Edit book
+  editBook(bookId) {
+    const book = Storage.getBookById(bookId);
+    if (book) {
+      UI.showEditModal(book);
+    }
+  },
+
+  // Save book edit
+  saveBookEdit(bookId, updates) {
+    const updatedBook = Storage.updateBook(bookId, updates);
+    if (updatedBook) {
+      UI.showNotification('Livro atualizado com sucesso!', 'success');
+      UI.closeModal();
+      this.refreshBooksList();
+    } else {
+      UI.showNotification('Erro ao atualizar o livro.', 'error');
+    }
+  },
+
+  // Delete book
+  deleteBook(bookId) {
+    const book = Storage.getBookById(bookId);
+    if (book) {
+      UI.showDeleteConfirmation(book, () => {
+        if (Storage.deleteBook(bookId)) {
+          UI.showNotification('Livro excluído com sucesso!', 'success');
+          this.refreshBooksList();
+        } else {
+          UI.showNotification('Erro ao excluir o livro.', 'error');
+        }
+      });
+    }
+  },
+
+  // Show book details
+  showBookDetails(bookId) {
+    const book = Storage.getBookById(bookId);
+    if (book) {
+      UI.showBookDetailsModal(book);
+    }
+  },
+
+  // Save settings
+  saveSettings() {
+    const apiKey = UI.elements.apiKeyInput?.value || '';
+    const saveApiKey = UI.elements.saveApiKeyCheckbox?.checked || false;
+
+    // Save settings
+    Storage.saveSettings({ saveApiKey });
+
+    // Save or clear API key based on setting
+    if (saveApiKey && apiKey) {
+      Storage.saveApiKey(apiKey);
+    } else {
+      Storage.saveApiKey('');
+    }
+
+    UI.showNotification('Configurações salvas!', 'success');
+  },
+
+  // Export library
+  exportLibrary() {
+    const books = Storage.getBooks();
+
+    if (books.length === 0) {
+      UI.showNotification('Sua biblioteca está vazia.', 'warning');
+      return;
+    }
+
+    const jsonContent = Storage.exportBooks();
+    const filename = `bookanizator_backup_${new Date().toISOString().split('T')[0]}.json`;
+
+    UI.downloadFile(jsonContent, filename);
+    UI.showNotification(`Biblioteca exportada: ${filename}`, 'success');
+  },
+
+  // Import library
+  importLibrary(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const mode = UI.elements.importMode?.value || 'merge';
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const result = Storage.importBooks(e.target.result, mode);
+        UI.showNotification(
+          `Importação concluída! ${result.added} livros adicionados, ${result.skipped} ignorados.`,
+          'success'
+        );
+        this.refreshBooksList();
+      } catch (error) {
+        UI.showNotification(`Erro na importação: ${error.message}`, 'error');
+      }
+
+      // Reset file input
+      event.target.value = '';
+    };
+
+    reader.onerror = () => {
+      UI.showNotification('Erro ao ler o arquivo.', 'error');
+    };
+
+    reader.readAsText(file);
+  },
+
+  // Initialize scanner
+  initScanner() {
+    // Scanner will be created when needed
+  },
+
+  // Open scanner modal - FIXED VERSION
+  async openScanner() {
+    console.log('Opening scanner...');
+    
+    // Check if Html5Qrcode library is loaded
+    if (typeof Html5Qrcode === 'undefined') {
+      UI.showNotification('Biblioteca de scanner não carregada. Recarregue a página.', 'error');
+      console.error('Html5Qrcode is not defined');
+      return;
+    }
+
+    // Check if reader element exists
+    const readerElement = document.getElementById('reader');
+    if (!readerElement) {
+      UI.showNotification('Elemento do scanner não encontrado no HTML.', 'error');
+      console.error('Reader element not found');
+      return;
+    }
+
+    const scannerModal = document.getElementById('scanner-modal');
+    if (!scannerModal) {
+      console.error('Scanner modal not found');
+      return;
+    }
+
+    scannerModal.classList.add('active');
+
+    try {
+      // Create scanner instance if not exists
+      if (!this.scanner) {
+        console.log('Creating Html5Qrcode instance...');
+        this.scanner = new Html5Qrcode('reader');
+      }
+
+      // Check if already scanning
+      if (this.isScanning) {
+        console.log('Already scanning, skipping...');
+        return;
+      }
+
+      console.log('Getting cameras...');
+      
+      // Request camera permission and get devices
+      const devices = await Html5Qrcode.getCameras();
+      
+      console.log('Cameras found:', devices);
+
+      if (!devices || devices.length === 0) {
+        throw new Error('Nenhuma câmera encontrada no dispositivo.');
+      }
+
+      // Prefer back camera on mobile
+      const backCamera = devices.find(d =>
+        d.label && (
+          d.label.toLowerCase().includes('back') ||
+          d.label.toLowerCase().includes('traseira') ||
+          d.label.toLowerCase().includes('rear') ||
+          d.label.toLowerCase().includes('environment')
+        )
+      );
+      
+      const cameraId = backCamera ? backCamera.id : devices[0].id;
+      console.log('Selected camera:', cameraId);
+
+      await this.startScanning(cameraId);
+      
+    } catch (error) {
+      console.error('Error in openScanner:', error);
+      
+      let errorMessage = 'Erro ao acessar a câmera.';
+      
+      if (error.name === 'NotAllowedError' || error.message.includes('Permission')) {
+        errorMessage = 'Permissão de câmera negada. Por favor, permita o acesso à câmera nas configurações do navegador.';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage = 'Nenhuma câmera encontrada no dispositivo.';
+      } else if (error.name === 'NotReadableError') {
+        errorMessage = 'Câmera em uso por outro aplicativo.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      UI.showNotification(errorMessage, 'error');
+      this.closeScanner();
+    }
+  },
+
+  // Start scanning - FIXED VERSION
+  async startScanning(cameraId) {
+    if (this.isScanning) {
+      console.log('Already scanning, skipping startScanning...');
+      return;
+    }
+
+    try {
+      console.log('Starting scanner with camera:', cameraId);
+      
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 150 },
+        aspectRatio: 1.0
+      };
+
+      // Only add formatsToSupport if Html5QrcodeSupportedFormats is available
+      if (typeof Html5QrcodeSupportedFormats !== 'undefined') {
+        config.formatsToSupport = [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.QR_CODE
+        ];
+      }
+
+      await this.scanner.start(
+        cameraId,
+        config,
+        (decodedText) => this.onScanSuccess(decodedText),
+        (errorMessage) => {
+          // Ignore scan errors (no code found) - this is normal
+        }
+      );
+      
+      this.isScanning = true;
+      console.log('Scanner started successfully');
+      
+    } catch (error) {
+      console.error('Error in startScanning:', error);
+      
+      let errorMessage = 'Erro ao iniciar o scanner.';
+      
+      if (error.message && error.message.includes('Camera')) {
+        errorMessage = 'Não foi possível acessar a câmera. Verifique as permissões.';
+      }
+      
+      UI.showNotification(errorMessage, 'error');
+      throw error;
+    }
+  },
+
+  // Handle successful scan
+  async onScanSuccess(decodedText) {
+    console.log('Scan successful:', decodedText);
+    
+    // Stop scanning
+    await this.stopScanning();
+
+    // Close modal
+    this.closeScanner();
+
+    // Play beep sound (optional feedback)
+    this.playBeep();
+
+    // Put scanned code in input field
+    const isbnInput = document.getElementById('isbn-input');
+    if (isbnInput) {
+      isbnInput.value = decodedText;
+    }
+
+    UI.showNotification(`Código escaneado: ${decodedText}`, 'success');
+
+    // Auto search
+    this.searchBook();
+  },
+
+  // Stop scanning
+  async stopScanning() {
+    if (this.scanner && this.isScanning) {
+      try {
+        console.log('Stopping scanner...');
+        await this.scanner.stop();
+        this.isScanning = false;
+        console.log('Scanner stopped');
+      } catch (error) {
+        console.error('Error stopping scanner:', error);
+        this.isScanning = false; // Reset flag even if stop fails
+      }
+    }
+  },
+
+  // Close scanner modal
+  async closeScanner() {
+    console.log('Closing scanner...');
+    await this.stopScanning();
+
+    const scannerModal = document.getElementById('scanner-modal');
+    if (scannerModal) {
+      scannerModal.classList.remove('active');
+    }
+  },
+
+  // Play beep sound for feedback
+  playBeep() {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      gainNode.gain.value = 0.3;
+
+      oscillator.start();
+      setTimeout(() => {
+        oscillator.stop();
+        audioContext.close();
+      }, 150);
+    } catch (e) {
+      // Ignore audio errors
+      console.log('Could not play beep:', e);
+    }
+  }
+};
+
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  App.init();
+});
+
+// Export for module usage
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = App;
+}

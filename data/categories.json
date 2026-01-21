@@ -1,0 +1,64 @@
+{
+  "languages": [
+    {
+      "id": "pt",
+      "name": "Português"
+    },
+    {
+      "id": "en",
+      "name": "Inglês"
+    }
+  ],
+  "categories": [
+    {
+      "id": "literatura",
+      "name": "Literatura",
+      "description": "Ficção, romances, contos, poesia"
+    },
+    {
+      "id": "desenvolvimento-pessoal",
+      "name": "Desenvolvimento Pessoal",
+      "description": "Autoajuda, produtividade, hábitos"
+    },
+    {
+      "id": "filosofia",
+      "name": "Filosofia",
+      "description": "Pensamento filosófico, história da filosofia"
+    },
+    {
+      "id": "ciencia",
+      "name": "Ciência",
+      "description": "Ciências naturais, física, biologia, química"
+    },
+    {
+      "id": "mau",
+      "name": "Mau",
+      "description": "Mal, ética negativa, crítica moral"
+    },
+    {
+      "id": "moral",
+      "name": "Moral",
+      "description": "Ética, valores, comportamento moral"
+    },
+    {
+      "id": "negocios",
+      "name": "Negócios",
+      "description": "Empreendedorismo, gestão, economia"
+    },
+    {
+      "id": "fundamento",
+      "name": "Fundamento",
+      "description": "Fundamentos teóricos, bases conceituais"
+    },
+    {
+      "id": "criatividade",
+      "name": "Criatividade",
+      "description": "Arte, design, inovação, pensamento criativo"
+    },
+    {
+      "id": "realidade-pensamento",
+      "name": "Realidade e Pensamento",
+      "description": "Epistemologia, cognição, percepção da realidade"
+    }
+  ]
+}

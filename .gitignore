@@ -1,0 +1,22 @@
+# Arquivos temporários
+*.backup
+*.backup2
+*.tmp
+*.log
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Arquivos de configuração do editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Arquivos de instrução (não necessários no deploy)
+INSTALAR_*.ps1
+instrucoes-*.txt
+codigo-*.txt
+modal-*.txt

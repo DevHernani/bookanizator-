@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookAnizator - Catalogador de Livros</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="logo">
+        <h1><span class="logo-icon">📚</span> BookAnizator</h1>
+      </div>
+      <nav>
+        <ul class="nav-menu">
+          <li>
+            <a href="#" class="nav-link active" data-section="add">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              Adicionar
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-section="books">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+              Meus Livros
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-section="settings">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              Configurações
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Add Book Section -->
+      <section id="add" class="section active">
+        <div class="section-header">
+          <h2>Adicionar Livro</h2>
+          <p>Busque por ISBN ou título para adicionar um livro à sua biblioteca.</p>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Buscar Livro</h3>
+          <div class="form-group">
+            <label for="isbn-input">ISBN ou Título</label>
+            <div class="input-group">
+              <input type="text" id="isbn-input" placeholder="Ex: 9788535914849 ou título do livro">
+              <button id="scan-btn" class="btn btn-secondary" title="Escanear código de barras">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                  <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                  <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                  <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                  <line x1="7" y1="12" x2="17" y2="12"></line>
+                  <line x1="7" y1="8" x2="9" y2="8"></line>
+                  <line x1="7" y1="16" x2="9" y2="16"></line>
+                  <line x1="11" y1="8" x2="11" y2="16"></line>
+                  <line x1="15" y1="8" x2="17" y2="8"></line>
+                  <line x1="15" y1="16" x2="17" y2="16"></line>
+                </svg>
+              </button>
+              <button id="search-btn" class="btn btn-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                Buscar
+              </button>
+              <button id="add-manual-btn" class="btn btn-secondary" style="margin-left: 10px;">➕ Adicionar Manualmente</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="search-results">
+          <div class="card">
+            <h3 class="card-title">Resultado da Busca</h3>
+            <div id="book-preview"></div>
+
+            <div class="classification-section">
+              <h3 class="card-title">Classificação</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="language-select">Idioma</label>
+                  <select id="language-select"></select>
+                </div>
+                <div class="form-group">
+                  <label for="category-select">Categoria</label>
+                  <select id="category-select"></select>
+                </div>
+              </div>
+
+              <div class="confidence-bar-container">
+                <label>Confiança da Classificação Automática</label>
+                <div class="confidence-bar">
+                  <div id="confidence-bar" class="confidence-fill" style="width: 0%"></div>
+                </div>
+                <p id="confidence-text" class="confidence-text"></p>
+              </div>
+
+              <p id="classification-reasoning" class="classification-reasoning"></p>
+
+              <div class="form-group">
+                <label for="notes-input">Notas (opcional)</label>
+                <textarea id="notes-input" rows="2" placeholder="Adicione notas pessoais sobre este livro..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button id="save-book-btn" class="btn btn-primary">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                  Salvar na Biblioteca
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Books List Section -->
+      <section id="books" class="section">
+        <div class="section-header">
+          <h2>Meus Livros</h2>
+          <p>Gerencie sua biblioteca pessoal.</p>
+        </div>
+
+        <div class="books-toolbar">
+          <div class="form-group">
+            <select id="filter-language">
+              <option value="">Todos os idiomas</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select id="filter-category">
+              <option value="">Todas as categorias</option>
+            </select>
+          </div>
+          <input type="text" id="search-books" placeholder="Buscar por título ou autor...">
+          <div class="view-toggle">
+            <button data-view="grid" class="active" title="Visualização em grade">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </button>
+            <button data-view="list" title="Visualização em lista">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <p class="books-count">Total: <span id="total-books">0</span> livros</p>
+
+        <div id="books-grid" class="books-grid">
+          <div class="empty-state">
+            <p>Nenhum livro encontrado.</p>
+            <p>Comece adicionando livros na seção "Adicionar".</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="settings" class="section">
+        <div class="section-header">
+          <h2>Configurações</h2>
+          <p>Configure a API e gerencie seus dados.</p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="card">
+            <h3 class="card-title">API do Claude</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9375rem;">
+              A API key é necessária para classificação automática dos livros.
+              Obtenha sua chave em <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a>
+            </p>
+            <div class="form-group">
+              <label for="api-key-input">API Key</label>
+              <input type="password" id="api-key-input" placeholder="sk-ant-...">
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="save-api-key">
+                Salvar API key localmente
+              </label>
+              <p style="color: var(--text-secondary); font-size: 0.8125rem; margin-top: 0.25rem;">
+                A chave será armazenada no navegador.
+              </p>
+            </div>
+            <div class="form-actions">
+              <button id="save-settings-btn" class="btn btn-primary">Salvar Configurações</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">Exportar / Importar</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9375rem;">
+              Faça backup da sua biblioteca ou restaure de um arquivo JSON.
+            </p>
+            <div class="form-actions" style="justify-content: flex-start;">
+              <button id="export-btn" class="btn btn-secondary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Exportar JSON
+              </button>
+              <button id="import-btn" class="btn btn-secondary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Importar JSON
+              </button>
+              <input type="file" id="import-file" accept=".json" style="display: none;">
+            </div>
+            <div class="import-options">
+              <label for="import-mode">Modo de importação:</label>
+              <select id="import-mode" style="margin-top: 0.5rem;">
+                <option value="merge">Mesclar (manter existentes)</option>
+                <option value="replace">Substituir (apagar existentes)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">Capas dos Livros</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9375rem;">
+              Busque automaticamente capas para os livros que ainda não possuem.
+            </p>
+            <div class="form-actions" style="justify-content: flex-start;">
+              <button onclick="window.location.href='update-covers.html'" class="btn btn-secondary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                Atualizar Capas
+              </button>
+              <button id="manual-cover-btn" class="btn btn-secondary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="12" y1="8" x2="12" y2="16"></line>
+                  <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                Adicionar Capa Manualmente
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Modal</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Carregando...</p>
+  </div>
+
+  <!-- Scanner Modal -->
+  <div id="scanner-modal" class="modal">
+    <div class="modal-content scanner-modal-content">
+      <div class="modal-header">
+        <h3>Escanear Código de Barras</h3>
+        <button class="modal-close" id="scanner-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="scanner-container">
+          <div id="reader"></div>
+        </div>
+        <p class="scanner-hint">Posicione o código de barras do livro na área da câmera</p>
+        <div class="scanner-actions">
+          <button id="scanner-cancel" class="btn btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+<!-- COPIE ESTE BLOCO E COLE ANTES DO </body> NO index.html -->
+
+<!-- Manual Book Add Modal -->
+<div id="manual-book-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Adicionar Livro Manualmente</h2>
+      <button class="modal-close" id="manual-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="manual-book-form">
+        <div class="form-group">
+          <label for="manual-title">Título *</label>
+          <input type="text" id="manual-title" required placeholder="Ex: A Batalha pela Verdade">
+        </div>
+        <div class="form-group">
+          <label for="manual-author">Autor *</label>
+          <input type="text" id="manual-author" required placeholder="Ex: Tassos Lycurgo">
+        </div>
+        <div class="form-group">
+          <label for="manual-isbn">ISBN (opcional)</label>
+          <input type="text" id="manual-isbn" placeholder="Ex: 9786587877211">
+        </div>
+        <div class="form-group">
+          <label for="manual-language">Idioma *</label>
+          <select id="manual-language" required>
+            <option value="Português">Português</option>
+            <option value="Inglês">Inglês</option>
+            <option value="Espanhol">Espanhol</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="manual-category">Categoria *</label>
+          <select id="manual-category" required>
+            <option value="Literatura">Literatura</option>
+            <option value="Ficção">Ficção</option>
+            <option value="Não-ficção">Não-ficção</option>
+            <option value="Religião">Religião</option>
+            <option value="Filosofia">Filosofia</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="manual-notes">Observações (opcional)</label>
+          <textarea id="manual-notes" rows="3" placeholder="Notas..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="manual-cancel">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Adicionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Manual Cover Add Modal -->
+<div id="manual-cover-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Adicionar Capa Manualmente</h2>
+      <button class="modal-close" id="cover-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="manual-cover-form">
+        <div class="form-group">
+          <label for="cover-book-select">Selecione o Livro *</label>
+          <select id="cover-book-select" required>
+            <option value="">Escolha um livro...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="cover-url">URL da Capa *</label>
+          <input type="url" id="cover-url" required placeholder="https://exemplo.com/capa.jpg">
+          <p style="color: var(--text-secondary); font-size: 0.8125rem; margin-top: 0.25rem;">
+            Cole o link direto da imagem da capa do livro.
+          </p>
+        </div>
+        <div class="form-group">
+          <label>Preview da Capa</label>
+          <div id="cover-preview" style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 8px; min-height: 200px;">
+            <p style="color: var(--text-secondary);">Cole a URL acima para ver o preview</p>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cover-cancel">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Capa</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>
