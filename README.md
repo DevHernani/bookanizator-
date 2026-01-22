@@ -27,6 +27,13 @@ Um catalogador de livros moderno e inteligente com classificação automática u
 - **Notas Pessoais** - Adicione anotações aos seus livros
 - **Exportação/Importação** - Backup em JSON
 
+### 🤖 Organização Inteligente de Estante (NOVO!)
+- **Análise por Foto** - Tire uma foto da sua estante
+- **Sugestões com IA** - Receba múltiplas sugestões de organização
+- **5 Tipos de Organização** - Por categoria, autor, cor, tamanho ou tema
+- **Comparação com Biblioteca** - A IA considera seus livros cadastrados
+- **Visual Atraente** - Sugestões para deixar a estante bonita e funcional
+
 ### 🔐 Privacidade
 - **100% Local** - Todos os dados salvos no navegador
 - **Sem Cadastro** - Não precisa criar conta

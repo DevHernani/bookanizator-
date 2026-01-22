@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organizar Estante (Grátis) - BookAnizator</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .shelf-organizer {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+    }
+
+    .suggestion-card {
+      background: var(--surface-color);
+      border-left: 4px solid var(--primary-color);
+      padding: 1.5rem;
+      margin: 1rem 0;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .suggestion-card h4 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .organization-type {
+      display: inline-block;
+      background: var(--primary-color);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .book-group {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: var(--background-color);
+      border-radius: 6px;
+    }
+
+    .book-group strong {
+      color: var(--primary-color);
+    }
+
+    .book-list {
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .free-badge {
+      display: inline-block;
+      background: #22c55e;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: bold;
+      margin-left: 0.5rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .stat-card {
+      background: var(--surface-color);
+      padding: 1.5rem;
+      border-radius: var(--radius-md);
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="shelf-organizer">
+    <div class="section-header">
+      <h1>📚 Organizar Estante <span class="free-badge">100% GRÁTIS</span></h1>
+      <p>Receba sugestões inteligentes de organização baseadas na sua biblioteca!</p>
+      <a href="index.html" style="color: var(--primary-color); text-decoration: none;">← Voltar</a>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">📊 Análise da Sua Biblioteca</h3>
+      <div id="stats-grid" class="stats-grid"></div>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;">
+      <h3 class="card-title">🎯 Sugestões de Organização</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+        Com base nos <span id="total-books-text">seus livros</span> cadastrados, aqui estão as melhores formas de organizar sua estante:
+      </p>
+      <div id="suggestions-container"></div>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;">
+      <h3 class="card-title">💡 Dicas Extras</h3>
+      <ul style="color: var(--text-secondary); line-height: 1.8;">
+        <li><strong>Deixe espaço:</strong> Reserve 10-20% de espaço livre para novos livros</li>
+        <li><strong>Livros pesados embaixo:</strong> Coloque livros grandes e pesados nas prateleiras inferiores</li>
+        <li><strong>Mais lidos ao alcance:</strong> Seus favoritos devem estar na altura dos olhos</li>
+        <li><strong>Decoração:</strong> Intercale com objetos decorativos para quebrar a monotonia</li>
+        <li><strong>Iluminação:</strong> Considere luzes LED para destacar seções importantes</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script>
+    // Função principal que gera sugestões inteligentes SEM API
+    function generateSmartSuggestions() {
+      const books = Storage.getBooks();
+
+      if (books.length === 0) {
+        document.getElementById('suggestions-container').innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+            <p>Você ainda não tem livros cadastrados.</p>
+            <p style="margin-top: 1rem;">
+              <a href="index.html" class="btn btn-primary">Adicionar Livros</a>
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      // Atualizar texto
+      document.getElementById('total-books-text').textContent = `${books.length} livros`;
+
+      // Gerar estatísticas
+      generateStats(books);
+
+      // Gerar sugestões
+      const suggestions = [];
+
+      // 1. Organização por Categoria
+      suggestions.push(organizeByCategoryAdvanced(books));
+
+      // 2. Organização por Autor
+      suggestions.push(organizeByAuthor(books));
+
+      // 3. Organização por Idioma + Categoria
+      suggestions.push(organizeByLanguageAndCategory(books));
+
+      // 4. Organização por Tamanho/Tipo
+      suggestions.push(organizeBySizeAndType(books));
+
+      // 5. Organização Temática (agrupamentos inteligentes)
+      suggestions.push(organizeByTheme(books));
+
+      // Renderizar sugestões
+      renderSuggestions(suggestions);
+    }
+
+    function generateStats(books) {
+      const categories = {};
+      const languages = {};
+      const authors = new Set();
+
+      books.forEach(book => {
+        categories[book.category] = (categories[book.category] || 0) + 1;
+        languages[book.language] = (languages[book.language] || 0) + 1;
+        book.authors.forEach(a => authors.add(a));
+      });
+
+      const topCategory = Object.entries(categories).sort((a, b) => b[1] - a[1])[0];
+      const topLanguage = Object.entries(languages).sort((a, b) => b[1] - a[1])[0];
+
+      const statsHTML = `
+        <div class="stat-card">
+          <div class="stat-value">${books.length}</div>
+          <div class="stat-label">Total de Livros</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${Object.keys(categories).length}</div>
+          <div class="stat-label">Categorias</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${authors.size}</div>
+          <div class="stat-label">Autores</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${topCategory[0]}</div>
+          <div class="stat-label">Categoria Principal (${topCategory[1]} livros)</div>
+        </div>
+      `;
+
+      document.getElementById('stats-grid').innerHTML = statsHTML;
+    }
+
+    function organizeByCategoryAdvanced(books) {
+      const categories = {};
+      books.forEach(book => {
+        if (!categories[book.category]) {
+          categories[book.category] = [];
+        }
+        categories[book.category].push(book);
+      });
+
+      const groups = Object.entries(categories)
+        .sort((a, b) => b[1].length - a[1].length)
+        .map(([cat, bks]) => ({
+          group: cat,
+          books: bks.map(b => b.title).slice(0, 5),
+          count: bks.length
+        }));
+
+      return {
+        type: '📁 Por Categoria',
+        description: 'Agrupe livros do mesmo assunto juntos',
+        benefits: [
+          'Fácil encontrar livros sobre um tema específico',
+          'Ótimo para estudo e pesquisa',
+          'Mantém sua biblioteca organizada por conhecimento',
+          'Facilita emprestar livros relacionados'
+        ],
+        groups: groups,
+        priority: groups.length > 3 ? 'Alta' : 'Média'
+      };
+    }
+
+    function organizeByAuthor(books) {
+      const authors = {};
+      books.forEach(book => {
+        const mainAuthor = book.authors[0] || 'Autor Desconhecido';
+        if (!authors[mainAuthor]) {
+          authors[mainAuthor] = [];
+        }
+        authors[mainAuthor].push(book);
+      });
+
+      const multipleBooks = Object.entries(authors)
+        .filter(([_, bks]) => bks.length > 1)
+        .sort((a, b) => b[1].length - a[1].length);
+
+      const groups = multipleBooks.map(([author, bks]) => ({
+        group: author,
+        books: bks.map(b => b.title),
+        count: bks.length
+      }));
+
+      return {
+        type: '✍️ Por Autor',
+        description: 'Organize alfabeticamente por sobrenome do autor',
+        benefits: [
+          'Fácil localizar obras de um autor favorito',
+          'Visual limpo e organizado',
+          'Sistema bibliotecário tradicional',
+          `Você tem ${multipleBooks.length} autores com múltiplas obras`
+        ],
+        groups: groups.slice(0, 10),
+        priority: multipleBooks.length > 5 ? 'Alta' : 'Baixa'
+      };
+    }
+
+    function organizeByLanguageAndCategory(books) {
+      const langCat = {};
+      books.forEach(book => {
+        const key = `${book.language} - ${book.category}`;
+        if (!langCat[key]) {
+          langCat[key] = [];
+        }
+        langCat[key].push(book);
+      });
+
+      const groups = Object.entries(langCat)
+        .sort((a, b) => b[1].length - a[1].length)
+        .map(([key, bks]) => ({
+          group: key,
+          books: bks.map(b => b.title).slice(0, 4),
+          count: bks.length
+        }));
+
+      return {
+        type: '🌍 Por Idioma + Categoria',
+        description: 'Separe por idioma primeiro, depois por categoria',
+        benefits: [
+          'Ótimo se você lê em múltiplos idiomas',
+          'Facilita encontrar livros para estudo de idiomas',
+          'Organização dupla: idioma E tema',
+          'Visual multicultural'
+        ],
+        groups: groups.slice(0, 8),
+        priority: Object.keys(langCat).length > 5 ? 'Alta' : 'Baixa'
+      };
+    }
+
+    function organizeBySizeAndType(books) {
+      // Simular tamanhos baseado em tipo
+      const fiction = books.filter(b =>
+        ['Literatura', 'Ficção'].includes(b.category)
+      );
+      const reference = books.filter(b =>
+        ['Filosofia', 'Ciência', 'Realidade e Pensamento'].includes(b.category)
+      );
+      const other = books.filter(b =>
+        !['Literatura', 'Ficção', 'Filosofia', 'Ciência', 'Realidade e Pensamento'].includes(b.category)
+      );
+
+      const groups = [
+        { group: 'Livros Leves (Literatura/Ficção)', books: fiction.map(b => b.title).slice(0, 5), count: fiction.length },
+        { group: 'Livros de Referência (Não-Ficção)', books: reference.map(b => b.title).slice(0, 5), count: reference.length },
+        { group: 'Outros', books: other.map(b => b.title).slice(0, 5), count: other.length }
+      ].filter(g => g.count > 0);
+
+      return {
+        type: '📏 Por Tamanho/Tipo',
+        description: 'Agrupe por tamanho físico e tipo de livro',
+        benefits: [
+          'Esteticamente agradável',
+          'Aproveita melhor o espaço vertical',
+          'Livros pesados ficam embaixo',
+          'Visual equilibrado'
+        ],
+        groups: groups,
+        priority: 'Média'
+      };
+    }
+
+    function organizeByTheme(books) {
+      // Criar agrupamentos temáticos inteligentes
+      const themes = {
+        'Desenvolvimento Pessoal e Filosofia': books.filter(b =>
+          ['Desenvolvimento Pessoal', 'Filosofia', 'Moral'].includes(b.category)
+        ),
+        'Conhecimento e Ciência': books.filter(b =>
+          ['Ciência', 'Realidade e Pensamento'].includes(b.category)
+        ),
+        'Arte e Criatividade': books.filter(b =>
+          ['Criatividade', 'Literatura'].includes(b.category)
+        ),
+        'Negócios e Carreira': books.filter(b =>
+          b.category === 'Negócios'
+        ),
+        'Fundamentos e Religião': books.filter(b =>
+          ['Fundamento', 'Moral'].includes(b.category)
+        )
+      };
+
+      const groups = Object.entries(themes)
+        .filter(([_, bks]) => bks.length > 0)
+        .map(([theme, bks]) => ({
+          group: theme,
+          books: bks.map(b => b.title).slice(0, 5),
+          count: bks.length
+        }));
+
+      return {
+        type: '🎯 Por Tema (Ilhas Temáticas)',
+        description: 'Crie "ilhas" de conhecimento relacionado',
+        benefits: [
+          'Perfeito para leitura e aprendizado',
+          'Facilita conexões entre livros',
+          'Estimula a curiosidade',
+          'Organização por jornada de conhecimento'
+        ],
+        groups: groups,
+        priority: groups.length > 2 ? 'Alta' : 'Média'
+      };
+    }
+
+    function renderSuggestions(suggestions) {
+      const container = document.getElementById('suggestions-container');
+
+      const html = suggestions.map((sug, index) => {
+        const priorityColor = sug.priority === 'Alta' ? '#22c55e' : '#64748b';
+
+        return `
+          <div class="suggestion-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="organization-type">${sug.type}</span>
+              <span style="color: ${priorityColor}; font-size: 0.75rem; font-weight: bold;">
+                ${sug.priority === 'Alta' ? '⭐ Recomendado' : 'Opcional'}
+              </span>
+            </div>
+
+            <h4>${sug.description}</h4>
+
+            <div style="margin: 1rem 0;">
+              <strong>✨ Vantagens:</strong>
+              <ul style="margin-top: 0.5rem; padding-left: 1.5rem; color: var(--text-secondary);">
+                ${sug.benefits.map(b => `<li>${b}</li>`).join('')}
+              </ul>
+            </div>
+
+            ${sug.groups && sug.groups.length > 0 ? `
+              <div style="margin-top: 1rem;">
+                <strong>📚 Como organizar:</strong>
+                ${sug.groups.map(group => `
+                  <div class="book-group">
+                    <strong>${group.group}</strong>
+                    <span style="color: var(--text-secondary); font-size: 0.875rem;">
+                      (${group.count} ${group.count === 1 ? 'livro' : 'livros'})
+                    </span>
+                    <div class="book-list">
+                      ${group.books.slice(0, 3).join(' • ')}
+                      ${group.count > 3 ? ` • +${group.count - 3} mais` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+    }
+
+    // Executar ao carregar
+    window.addEventListener('DOMContentLoaded', generateSmartSuggestions);
+  </script>
+</body>
+</html>
